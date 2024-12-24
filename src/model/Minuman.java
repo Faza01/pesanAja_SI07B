@@ -9,10 +9,7 @@ package model;
  * @author Faza Bilwildi Emyu_2311103083_SI-07-B
  */
 public class Minuman extends Produk {
-    private String namaMinuman;
-
-    public Minuman(String namaMinuman, String deskripsi, double harga, boolean ketersediaan) {
-        super(deskripsi, harga, ketersediaan);
-        this.namaMinuman = namaMinuman;
+    public Minuman(String nama, double harga, String deskripsi, boolean tersedia) {
+        super(nama, harga, deskripsi, tersedia);
     }
 }
