@@ -2,7 +2,7 @@ package forms;
 
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
-import controller.db_connection;
+import databases.db_connection;
 import java.awt.Color;
 import javax.swing.ButtonGroup;
 import javax.swing.JOptionPane;
@@ -274,32 +274,14 @@ public class RegisterForm extends javax.swing.JFrame {
 
             // Membuat objek Costumer
             Costumer costumer = new Costumer(username, password, nama, telp, ttl, gender);
-
-            try (Connection conn = db_connection.getConnection()) {
-                String sql = "INSERT INTO user (username, password, role, nama_lengkap, no_telp, TTL, jenis_kelamin) VALUES (?, ?, ?, ?, ?, ?, ?)";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                stmt.setString(1, costumer.getUsername());
-                stmt.setString(2, costumer.getPassword());
-                stmt.setString(3, "costumer");
-                stmt.setString(4, costumer.getNama());
-                stmt.setString(5, costumer.getTelp());
-                stmt.setDate(6, new java.sql.Date(costumer.getTtl().getTime()));
-                stmt.setString(7, costumer.getJenisKelamin());
-
-                // Eksekusi query untuk menyimpan data
-                int affectedRows = stmt.executeUpdate();
-                if (affectedRows > 0) {
-//                     Jika berhasil, pindah ke form login
-                    JOptionPane.showMessageDialog(this, "Registrasi berhasil!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    LoginForm loginForm = new LoginForm();
-                    loginForm.setVisible(true);
-                    this.dispose(); // Tutup form registrasi
-                } else {
-                    JOptionPane.showMessageDialog(this, "Registrasi gagal!", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat menyimpan data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+            boolean reg = costumer.register();
+            if (reg) {
+                JOptionPane.showMessageDialog(this, "Registrasi berhasil!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                LoginForm loginForm = new LoginForm();
+                loginForm.setVisible(true);
+                this.dispose(); // Tutup form registrasi
+            } else {
+                JOptionPane.showMessageDialog(this, "Registrasi gagal!", "Error", JOptionPane.ERROR_MESSAGE);
             }
         } catch (ValidasiInputException e) {
             JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

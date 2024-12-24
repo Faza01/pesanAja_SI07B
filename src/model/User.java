@@ -4,11 +4,18 @@
  */
 package model;
 
+import databases.db_connection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 /**
  *
  * @author Faza Bilwildi Emyu_2311103083_SI-07-B
  */
-public class User {
+public abstract class User {
+
     private String username;
     private String password;
     private String role;
@@ -37,5 +44,65 @@ public class User {
 
     public String getRole() {
         return role;
+    }
+
+    public String login() throws SQLException {
+
+        try (Connection conn = db_connection.getConnection()) {
+            String sql = "SELECT role FROM user WHERE username = ? AND password = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    this.role = rs.getString("role");
+                    return this.role;
+                }
+                return null;
+            }
+        }
+    }
+
+    public User getCurrentUser(String username) throws ValidasiInputException {
+        try (Connection conn = db_connection.getConnection()) {
+            String sql = "SELECT * FROM user WHERE username = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                // Tentukan tipe user berdasarkan role
+                String role = rs.getString("role");
+                String password = rs.getString("password");
+
+                if ("admin".equalsIgnoreCase(role)) {
+                    return new Admin(
+                            username,
+                            password
+                    );
+                } else if ("costumer".equalsIgnoreCase(role)) {
+                    return new Costumer(
+                            username,
+                            password,
+                            rs.getString("nama_lengkap"),
+                            rs.getString("no_telp"),
+                            rs.getDate("ttl"),
+                            rs.getString("jenis_kelamin")
+                    );
+                } else {
+                    throw new ValidasiInputException("Role tidak dikenali: " + role);
+                }
+            } else {
+                throw new ValidasiInputException("User dengan username '" + username + "' tidak ditemukan.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new ValidasiInputException("Terjadi kesalahan saat mengakses database: " + e.getMessage());
+        }
+    }
+
+    public boolean register() {
+        return false;
     }
 }

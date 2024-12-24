@@ -16,26 +16,26 @@ public class Admin extends User {
 
     // Method tambahan untuk Admin
     public void viewOrder() {
-        System.out.println("Admin melihat daftar order.");
+
     }
 
     public void updateStatusOrder() {
-        System.out.println("Admin mengupdate status order.");
+
     }
 
     public void createProduk() {
-        System.out.println("Admin membuat produk baru.");
+
     }
 
     public void updateProduk() {
-        System.out.println("Admin mengupdate produk.");
+
     }
 
     public void deleteProduk() {
-        System.out.println("Admin menghapus produk.");
+
     }
 
     public void setKetersediaanProduk() {
-        System.out.println("Admin mengatur ketersediaan produk.");
+
     }
 }

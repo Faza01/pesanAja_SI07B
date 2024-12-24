@@ -7,6 +7,7 @@ package forms;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import databases.OrderDB;
 import java.awt.*;
 import javax.swing.*;
 import java.awt.geom.RoundRectangle2D;
@@ -14,7 +15,16 @@ import javax.swing.border.Border;
 import model.Produk;
 import model.Makanan;
 import model.Minuman;
-import controller.ProdukManager;
+import java.util.List;
+import java.text.DecimalFormat;
+import java.util.Vector;
+import javax.swing.table.DefaultTableModel;
+import databases.ProdukDB;
+import java.sql.*;
+import model.Order;
+import model.ValidasiInputException;
+import java.util.Date;
+import model.User;
 
 /**
  *
@@ -23,30 +33,35 @@ import controller.ProdukManager;
 public class DashboardForm extends javax.swing.JFrame {
 
     private CardLayout cardLayout;
-    private ProdukManager produkManager;
+    private User currentUser;
 
-    public DashboardForm() {
+    public DashboardForm(User user) {
         initComponents();
+        this.currentUser = user;
+
         setLocationRelativeTo(null);
-        produkManager = new ProdukManager();
+        refreshFoodCards();
+        loadOrders(currentUser.getUsername(), currentUser.getRole());
         cardLayout = (CardLayout) mainPanel.getLayout();
 
         txtSearch.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Search here");
 
         Icon homeIcon_Focus = new FlatSVGIcon("assets/home-focus.svg", 24, 24);
         Icon historyIcon_Focus = new FlatSVGIcon("assets/history-focus.svg", 24, 24);
-        Icon profileIcon_Focus = new FlatSVGIcon("assets/profile-focus.svg", 20, 20);
         Icon logOutIcon_Focus = new FlatSVGIcon("assets/log-focus.svg", 20, 20);
 
         Icon homeIcon = new FlatSVGIcon("assets/home-nonFocus.svg", 24, 24);
         Icon historyIcon = new FlatSVGIcon("assets/history-nonFocus.svg", 24, 24);
-        Icon profileIcon = new FlatSVGIcon("assets/profile-nonFocus.svg", 20, 20);
         Icon logOutIcon = new FlatSVGIcon("assets/log-nonFocus.svg", 20, 20);
 
         addHoverEffect(btnHome, new Color(253, 82, 8), homeIcon, homeIcon_Focus);
+        addHoverEffect(btnOrder, new Color(253, 82, 8), historyIcon, historyIcon_Focus);
         addHoverEffect(btnHistory, new Color(253, 82, 8), historyIcon, historyIcon_Focus);
-        addHoverEffect(btnProfile, new Color(253, 82, 8), profileIcon, profileIcon_Focus);
         addHoverEffect(btnLogOut, new Color(253, 82, 8), logOutIcon, logOutIcon_Focus);
+    }
+
+    public DashboardForm() {
+        this(null); // Panggil konstruktor lain dengan User = null
     }
 
     /**
@@ -58,30 +73,29 @@ public class DashboardForm extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        foodCards = jPanel1 = new RoundedPanel(30, new Color(255, 255, 255)); 
-        jPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.BLACK, 2)); // Menambahkan border
-        ;
+        foodCards = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
         txtNama = new javax.swing.JLabel();
         txtHarga = new javax.swing.JLabel();
         txtDeskripsi = new javax.swing.JLabel();
         jPanel5 = new javax.swing.JPanel();
-        btnAddProduk = new javax.swing.JButton();
         txtKetersediaan = new javax.swing.JLabel();
+        jPanel3 = new javax.swing.JPanel();
+        btnAddProduk = new javax.swing.JButton();
+        jSpinner1 = new javax.swing.JSpinner();
         sidePanel = new javax.swing.JPanel();
         btnHome = new javax.swing.JButton();
-        btnHistory = new javax.swing.JButton();
+        btnOrder = new javax.swing.JButton();
         btnLogOut = new javax.swing.JButton();
-        btnProfile = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
+        btnHistory = new javax.swing.JButton();
         mainPanel = new javax.swing.JPanel();
         homePanel = new javax.swing.JPanel();
         foodPanel = new javax.swing.JPanel();
         txtSearch = new javax.swing.JTextField();
         scrollFood = new javax.swing.JScrollPane();
         foodContent = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
+        btnRefresh = new javax.swing.JButton();
         orderPanel = new javax.swing.JPanel();
         btnCheckOut = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
@@ -93,11 +107,18 @@ public class DashboardForm extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         TblOrder = new javax.swing.JTable();
         jLabel9 = new javax.swing.JLabel();
+        btnHapus = new javax.swing.JButton();
+        MyOrderPanel = new javax.swing.JPanel();
+        jLabel8 = new javax.swing.JLabel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        tblMyOrder = new javax.swing.JTable();
+        btnDetail1 = new javax.swing.JButton();
+        btnRefreshOrder = new javax.swing.JButton();
         historyPanel = new javax.swing.JPanel();
-        jLabel2 = new javax.swing.JLabel();
-        jPanel1 = new javax.swing.JPanel();
-        profilePanel = new javax.swing.JPanel();
-        jLabel3 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tblHistory = new javax.swing.JTable();
+        btnDetail = new javax.swing.JButton();
 
         foodCards.setBackground(new java.awt.Color(255, 255, 255));
         foodCards.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -134,15 +155,24 @@ public class DashboardForm extends javax.swing.JFrame {
         jPanel5.setPreferredSize(new java.awt.Dimension(115, 23));
         jPanel5.setLayout(new java.awt.BorderLayout());
 
+        txtKetersediaan.setText("ketersediaan");
+        jPanel5.add(txtKetersediaan, java.awt.BorderLayout.LINE_START);
+
+        jPanel3.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel3.setLayout(new javax.swing.BoxLayout(jPanel3, javax.swing.BoxLayout.X_AXIS));
+
         btnAddProduk.setBackground(new java.awt.Color(253, 82, 8));
         btnAddProduk.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnAddProduk.setForeground(new java.awt.Color(255, 255, 255));
         btnAddProduk.setText("Add");
-        btnAddProduk.setPreferredSize(new java.awt.Dimension(115, 23));
-        jPanel5.add(btnAddProduk, java.awt.BorderLayout.EAST);
+        btnAddProduk.setPreferredSize(new java.awt.Dimension(100, 23));
+        jPanel3.add(btnAddProduk);
 
-        txtKetersediaan.setText("ketersediaan");
-        jPanel5.add(txtKetersediaan, java.awt.BorderLayout.LINE_START);
+        jSpinner1.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jSpinner1.setPreferredSize(new java.awt.Dimension(45, 22));
+        jPanel3.add(jSpinner1);
+
+        jPanel5.add(jPanel3, java.awt.BorderLayout.EAST);
 
         foodCards.add(jPanel5, java.awt.BorderLayout.SOUTH);
 
@@ -162,13 +192,13 @@ public class DashboardForm extends javax.swing.JFrame {
             }
         });
 
-        btnHistory.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        btnHistory.setForeground(new java.awt.Color(51, 51, 51));
-        btnHistory.setText("History");
-        btnHistory.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        btnHistory.addActionListener(new java.awt.event.ActionListener() {
+        btnOrder.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnOrder.setForeground(new java.awt.Color(51, 51, 51));
+        btnOrder.setText("Order");
+        btnOrder.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        btnOrder.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnHistoryActionPerformed(evt);
+                btnOrderActionPerformed(evt);
             }
         });
 
@@ -183,29 +213,15 @@ public class DashboardForm extends javax.swing.JFrame {
             }
         });
 
-        btnProfile.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        btnProfile.setForeground(new java.awt.Color(51, 51, 51));
-        btnProfile.setText("Profile");
-        btnProfile.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        btnProfile.addActionListener(new java.awt.event.ActionListener() {
+        btnHistory.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        btnHistory.setForeground(new java.awt.Color(51, 51, 51));
+        btnHistory.setText("History");
+        btnHistory.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        btnHistory.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnProfileActionPerformed(evt);
+                btnHistoryActionPerformed(evt);
             }
         });
-
-        jPanel2.setBackground(new java.awt.Color(253, 82, 8));
-        jPanel2.setPreferredSize(new java.awt.Dimension(3, 0));
-
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 3, Short.MAX_VALUE)
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
 
         javax.swing.GroupLayout sidePanelLayout = new javax.swing.GroupLayout(sidePanel);
         sidePanel.setLayout(sidePanelLayout);
@@ -218,24 +234,21 @@ public class DashboardForm extends javax.swing.JFrame {
             .addGroup(sidePanelLayout.createSequentialGroup()
                 .addGap(53, 53, 53)
                 .addGroup(sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(btnProfile, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btnHistory, javax.swing.GroupLayout.DEFAULT_SIZE, 95, Short.MAX_VALUE)
-                    .addComponent(btnHome, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnOrder, javax.swing.GroupLayout.DEFAULT_SIZE, 95, Short.MAX_VALUE)
+                    .addComponent(btnHome, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnHistory, javax.swing.GroupLayout.DEFAULT_SIZE, 95, Short.MAX_VALUE))
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         sidePanelLayout.setVerticalGroup(
             sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(sidePanelLayout.createSequentialGroup()
                 .addGap(62, 62, 62)
-                .addGroup(sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE)
-                    .addComponent(btnHome, javax.swing.GroupLayout.DEFAULT_SIZE, 35, Short.MAX_VALUE))
+                .addComponent(btnHome, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(btnOrder, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(btnHistory, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(btnProfile, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 249, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 340, Short.MAX_VALUE)
                 .addComponent(btnLogOut, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(23, 23, 23))
         );
@@ -266,10 +279,10 @@ public class DashboardForm extends javax.swing.JFrame {
         foodContent.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 10));
         scrollFood.setViewportView(foodContent);
 
-        jButton1.setText("jButton1");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        btnRefresh.setText("refresh");
+        btnRefresh.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                btnRefreshActionPerformed(evt);
             }
         });
 
@@ -278,14 +291,14 @@ public class DashboardForm extends javax.swing.JFrame {
         foodPanelLayout.setHorizontalGroup(
             foodPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(foodPanelLayout.createSequentialGroup()
-                .addComponent(scrollFood, javax.swing.GroupLayout.DEFAULT_SIZE, 594, Short.MAX_VALUE)
+                .addGroup(foodPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(scrollFood, javax.swing.GroupLayout.DEFAULT_SIZE, 594, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, foodPanelLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(243, 243, 243)
+                        .addComponent(btnRefresh)))
                 .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, foodPanelLayout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 255, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(150, 150, 150)
-                .addComponent(jButton1)
-                .addGap(99, 99, 99))
         );
         foodPanelLayout.setVerticalGroup(
             foodPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -296,7 +309,7 @@ public class DashboardForm extends javax.swing.JFrame {
                         .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(26, 26, 26))
                     .addGroup(foodPanelLayout.createSequentialGroup()
-                        .addComponent(jButton1)
+                        .addComponent(btnRefresh)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
                 .addComponent(scrollFood, javax.swing.GroupLayout.PREFERRED_SIZE, 515, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -310,30 +323,35 @@ public class DashboardForm extends javax.swing.JFrame {
         btnCheckOut.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnCheckOut.setForeground(new java.awt.Color(255, 255, 255));
         btnCheckOut.setText("Check Out");
+        btnCheckOut.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCheckOutActionPerformed(evt);
+            }
+        });
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        jLabel1.setForeground(new java.awt.Color(153, 153, 153));
+        jLabel1.setForeground(new java.awt.Color(51, 51, 51));
         jLabel1.setText("Total");
 
         jLabel4.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        jLabel4.setForeground(new java.awt.Color(153, 153, 153));
+        jLabel4.setForeground(new java.awt.Color(51, 51, 51));
         jLabel4.setText("Sub Total");
 
         jLabel5.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        jLabel5.setForeground(new java.awt.Color(153, 153, 153));
+        jLabel5.setForeground(new java.awt.Color(51, 51, 51));
         jLabel5.setText("Diskon");
 
         lblTotal.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lblTotal.setForeground(new java.awt.Color(51, 51, 51));
-        lblTotal.setText("total");
+        lblTotal.setText("0");
 
         lblDiskon.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lblDiskon.setForeground(new java.awt.Color(51, 51, 51));
-        lblDiskon.setText("diskon");
+        lblDiskon.setText("0");
 
         lblSubTotal.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         lblSubTotal.setForeground(new java.awt.Color(51, 51, 51));
-        lblSubTotal.setText("sub total");
+        lblSubTotal.setText("0");
 
         jScrollPane1.setBackground(new java.awt.Color(255, 255, 255));
         jScrollPane1.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
@@ -348,53 +366,80 @@ public class DashboardForm extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Item", "Jumlah", "Harga"
+                "Item", "Qty", "Harga"
             }
-        ));
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.Integer.class, java.lang.Double.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
         jScrollPane1.setViewportView(TblOrder);
 
         jLabel9.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel9.setForeground(new java.awt.Color(51, 51, 51));
         jLabel9.setText("My Order");
 
+        btnHapus.setText("delete");
+        btnHapus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnHapusActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout orderPanelLayout = new javax.swing.GroupLayout(orderPanel);
         orderPanel.setLayout(orderPanelLayout);
         orderPanelLayout.setHorizontalGroup(
             orderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(orderPanelLayout.createSequentialGroup()
-                .addGroup(orderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(orderPanelLayout.createSequentialGroup()
-                        .addGap(37, 37, 37)
-                        .addComponent(jLabel9))
-                    .addGroup(orderPanelLayout.createSequentialGroup()
-                        .addGap(17, 17, 17)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 267, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(16, 16, 16))
+                .addGap(37, 37, 37)
+                .addComponent(jLabel9)
+                .addGap(182, 182, 182))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, orderPanelLayout.createSequentialGroup()
-                .addGroup(orderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(orderPanelLayout.createSequentialGroup()
-                        .addComponent(jLabel4)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(lblSubTotal))
-                    .addGroup(orderPanelLayout.createSequentialGroup()
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(lblDiskon))
+                .addContainerGap()
+                .addGroup(orderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, orderPanelLayout.createSequentialGroup()
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(lblTotal))
-                    .addComponent(btnCheckOut, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(31, 31, 31))
+                        .addGroup(orderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(orderPanelLayout.createSequentialGroup()
+                                .addComponent(jLabel4)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(lblSubTotal))
+                            .addGroup(orderPanelLayout.createSequentialGroup()
+                                .addComponent(jLabel5)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(lblDiskon))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, orderPanelLayout.createSequentialGroup()
+                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(lblTotal))
+                            .addComponent(btnCheckOut, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(31, 31, 31))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, orderPanelLayout.createSequentialGroup()
+                        .addGroup(orderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(btnHapus)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 267, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(14, 14, 14))))
         );
         orderPanelLayout.setVerticalGroup(
             orderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, orderPanelLayout.createSequentialGroup()
                 .addGap(19, 19, 19)
                 .addComponent(jLabel9)
-                .addGap(66, 66, 66)
+                .addGap(30, 30, 30)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnHapus)
+                .addGap(19, 19, 19)
                 .addGroup(orderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(lblSubTotal))
@@ -415,75 +460,149 @@ public class DashboardForm extends javax.swing.JFrame {
 
         mainPanel.add(homePanel, "Home");
 
+        MyOrderPanel.setBackground(new java.awt.Color(243, 243, 243));
+        MyOrderPanel.setPreferredSize(new java.awt.Dimension(900, 600));
+
+        jLabel8.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel8.setForeground(new java.awt.Color(51, 51, 51));
+        jLabel8.setText("My Order");
+
+        tblMyOrder.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Id Transaksi", "Total Harga", "Potongan Harga", "Waktu Pembelian", "Status Pesanan"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane3.setViewportView(tblMyOrder);
+
+        btnDetail1.setBackground(new java.awt.Color(253, 82, 8));
+        btnDetail1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        btnDetail1.setForeground(new java.awt.Color(255, 255, 255));
+        btnDetail1.setText("Lihat Detail");
+        btnDetail1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDetail1ActionPerformed(evt);
+            }
+        });
+
+        btnRefreshOrder.setText("refresh");
+        btnRefreshOrder.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRefreshOrderActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout MyOrderPanelLayout = new javax.swing.GroupLayout(MyOrderPanel);
+        MyOrderPanel.setLayout(MyOrderPanelLayout);
+        MyOrderPanelLayout.setHorizontalGroup(
+            MyOrderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(MyOrderPanelLayout.createSequentialGroup()
+                .addGap(26, 26, 26)
+                .addGroup(MyOrderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(MyOrderPanelLayout.createSequentialGroup()
+                        .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 216, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnRefreshOrder))
+                    .addGroup(MyOrderPanelLayout.createSequentialGroup()
+                        .addGap(6, 6, 6)
+                        .addComponent(btnDetail1, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 824, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        MyOrderPanelLayout.setVerticalGroup(
+            MyOrderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(MyOrderPanelLayout.createSequentialGroup()
+                .addGap(26, 26, 26)
+                .addGroup(MyOrderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel8)
+                    .addComponent(btnRefreshOrder))
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 435, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(btnDetail1, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30))
+        );
+
+        mainPanel.add(MyOrderPanel, "Order");
+
         historyPanel.setBackground(new java.awt.Color(243, 243, 243));
         historyPanel.setPreferredSize(new java.awt.Dimension(900, 600));
 
-        jLabel2.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel2.setText("History");
+        jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel7.setForeground(new java.awt.Color(51, 51, 51));
+        jLabel7.setText("My History Order");
 
-        jPanel1.setBackground(new java.awt.Color(204, 0, 51));
+        tblHistory.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
-        );
+            },
+            new String [] {
+                "Daftar Pesanan", "Total Harga", "Jumlah Bayar", "Kembalian", "Waktu Pesanan"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane2.setViewportView(tblHistory);
+        if (tblHistory.getColumnModel().getColumnCount() > 0) {
+            tblHistory.getColumnModel().getColumn(0).setHeaderValue("Daftar Pesanan");
+            tblHistory.getColumnModel().getColumn(2).setHeaderValue("Jumlah Bayar");
+            tblHistory.getColumnModel().getColumn(3).setHeaderValue("Kembalian");
+        }
+
+        btnDetail.setBackground(new java.awt.Color(253, 82, 8));
+        btnDetail.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        btnDetail.setForeground(new java.awt.Color(255, 255, 255));
+        btnDetail.setText("Lihat Detail");
+        btnDetail.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDetailActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout historyPanelLayout = new javax.swing.GroupLayout(historyPanel);
         historyPanel.setLayout(historyPanelLayout);
         historyPanelLayout.setHorizontalGroup(
             historyPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(historyPanelLayout.createSequentialGroup()
+                .addGap(26, 26, 26)
                 .addGroup(historyPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 216, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(historyPanelLayout.createSequentialGroup()
-                        .addGap(212, 212, 212)
-                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(historyPanelLayout.createSequentialGroup()
-                        .addGap(97, 97, 97)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(651, Short.MAX_VALUE))
+                        .addGap(6, 6, 6)
+                        .addGroup(historyPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnDetail, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 805, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(17, Short.MAX_VALUE))
         );
         historyPanelLayout.setVerticalGroup(
             historyPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(historyPanelLayout.createSequentialGroup()
-                .addGap(139, 139, 139)
-                .addComponent(jLabel2)
-                .addGap(93, 93, 93)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(252, Short.MAX_VALUE))
+                .addGap(26, 26, 26)
+                .addComponent(jLabel7)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 435, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(btnDetail, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(30, 30, 30))
         );
 
         mainPanel.add(historyPanel, "History");
-
-        profilePanel.setBackground(new java.awt.Color(243, 243, 243));
-        profilePanel.setPreferredSize(new java.awt.Dimension(900, 600));
-
-        jLabel3.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel3.setText("Profile");
-
-        javax.swing.GroupLayout profilePanelLayout = new javax.swing.GroupLayout(profilePanel);
-        profilePanel.setLayout(profilePanelLayout);
-        profilePanelLayout.setHorizontalGroup(
-            profilePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(profilePanelLayout.createSequentialGroup()
-                .addGap(169, 169, 169)
-                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(694, Short.MAX_VALUE))
-        );
-        profilePanelLayout.setVerticalGroup(
-            profilePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(profilePanelLayout.createSequentialGroup()
-                .addGap(167, 167, 167)
-                .addComponent(jLabel3)
-                .addContainerGap(417, Short.MAX_VALUE))
-        );
-
-        mainPanel.add(profilePanel, "Profile");
 
         getContentPane().add(mainPanel, java.awt.BorderLayout.CENTER);
         mainPanel.getAccessibleContext().setAccessibleDescription("");
@@ -495,9 +614,9 @@ public class DashboardForm extends javax.swing.JFrame {
         cardLayout.show(mainPanel, "Home");
     }//GEN-LAST:event_btnHomeActionPerformed
 
-    private void btnHistoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHistoryActionPerformed
-        cardLayout.show(mainPanel, "History");
-    }//GEN-LAST:event_btnHistoryActionPerformed
+    private void btnOrderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOrderActionPerformed
+        cardLayout.show(mainPanel, "Order");
+    }//GEN-LAST:event_btnOrderActionPerformed
 
     private void btnLogOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLogOutActionPerformed
         LoginForm login = new LoginForm();
@@ -506,32 +625,86 @@ public class DashboardForm extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_btnLogOutActionPerformed
 
-    private void btnProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProfileActionPerformed
-        cardLayout.show(mainPanel, "Profile");
-    }//GEN-LAST:event_btnProfileActionPerformed
+    private void btnCheckOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckOutActionPerformed
+        // Mendapatkan data dari tabel
+        DefaultTableModel dtm = (DefaultTableModel) TblOrder.getModel();
+        int rowCount = dtm.getRowCount();
+        double totalHarga = 0;
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // Tambahkan data dummy
-        String nama = "Nasi Goreng";
-        double harga = 15000.0;
-        String deskripsi = "Nasi goreng lezat dengan tambahan ayam dan telur";
-        boolean tersedia = true;
-        String kategori = "Makanan";
-//        String gambarPath = "path/to/image/nasi_goreng.jpg"; // Path gambar lokal
-
-        Produk produk;
-        if (kategori.equals("Makanan")) {
-            produk = new Makanan(nama, harga, deskripsi, tersedia);
-        } else {
-            produk = new Minuman(nama, harga, deskripsi, tersedia);
+        // Memastikan ada data di tabel
+        if (rowCount == 0) {
+            JOptionPane.showMessageDialog(null, "Tidak ada item dalam pesanan!");
+            return;
         }
 
-        produkManager.tambahProduk(produk); // Tambahkan ke model data
+        // Membuat Order baru
+        String idTransaksi = "TRX" + System.currentTimeMillis(); // Menggunakan waktu saat ini sebagai ID transaksi
+        Order newOrder = new Order(idTransaksi, currentUser.getUsername());
 
-        createFoodCard(produk); // Tambahkan produk ke layout GUI
+        // Menambahkan produk dari TblOrder ke dalam Order baru
+        for (int i = 0; i < rowCount; i++) {
+            String namaProduk = dtm.getValueAt(i, 0).toString();
+            int qty = Integer.parseInt(dtm.getValueAt(i, 1).toString());
+            double totHarga = Double.parseDouble(dtm.getValueAt(i, 2).toString());
 
-        JOptionPane.showMessageDialog(null, "Produk berhasil ditambahkan!");
-    }//GEN-LAST:event_jButton1ActionPerformed
+            newOrder.getListNamaProduk().add(namaProduk);
+            newOrder.getListQty().add(qty);
+            newOrder.getListTotHarga().add(totHarga);
+
+            totalHarga += totHarga;
+            newOrder.setTotalHarga(totalHarga); // Menambahkan ke total harga
+        }
+
+        // Menambahkan potongan harga jika ada
+        double potongan = Double.parseDouble(lblDiskon.getText());
+        newOrder.setPotonganHarga(potongan);
+        totalHarga -= potongan;
+        newOrder.setPotonganHarga(totalHarga); // Mengurangi potongan dari total harga
+
+        // Update waktu pembelian
+        newOrder.setWaktuPembelian(new Date());
+        newOrder.setStatusPesanan("Proses");// Status pesanan default "Proses"
+
+        // Menyimpan order ke database
+        OrderDB.saveOrder(newOrder);
+
+        // Menampilkan pesan bahwa pesanan berhasil dibuat
+        JOptionPane.showMessageDialog(null, "Pesanan berhasil dibuat! Total harga: " + newOrder.getTotalHarga());
+
+        // Opsional: Reset tabel setelah checkout
+        dtm.setRowCount(0); // Menghapus semua baris di tabel
+        lblSubTotal.setText("0");
+        lblDiskon.setText("0");
+        lblTotal.setText("0");
+    }//GEN-LAST:event_btnCheckOutActionPerformed
+
+    private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
+        DefaultTableModel dt = (DefaultTableModel) TblOrder.getModel();
+        int rw = TblOrder.getSelectedRow();
+        dt.removeRow(rw);
+
+        hitungHarga();
+    }//GEN-LAST:event_btnHapusActionPerformed
+
+    private void btnRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefreshActionPerformed
+        refreshFoodCards();
+    }//GEN-LAST:event_btnRefreshActionPerformed
+
+    private void btnDetailActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetailActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnDetailActionPerformed
+
+    private void btnDetail1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetail1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnDetail1ActionPerformed
+
+    private void btnHistoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHistoryActionPerformed
+        cardLayout.show(mainPanel, "History");
+    }//GEN-LAST:event_btnHistoryActionPerformed
+
+    private void btnRefreshOrderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefreshOrderActionPerformed
+        loadOrders(currentUser.getUsername(), currentUser.getRole());
+    }//GEN-LAST:event_btnRefreshOrderActionPerformed
 
     private void createFoodCard(Produk produk) {
         // Duplikasi panel foodCards (menggunakan template yang sudah ada)
@@ -542,7 +715,7 @@ public class DashboardForm extends javax.swing.JFrame {
 
         // Bagian gambar produk
         JLabel gambarLabel = new JLabel();
-//        gambarLabel.setIcon(new ImageIcon(produk.getGambar())); // Gambar produk
+        // gambarLabel.setIcon(new ImageIcon(produk.getGambar())); // Gambar produk (uncomment jika ada implementasi)
         gambarLabel.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
         gambarLabel.setPreferredSize(new java.awt.Dimension(100, 100));
         foodCard.add(gambarLabel, java.awt.BorderLayout.WEST);
@@ -553,7 +726,14 @@ public class DashboardForm extends javax.swing.JFrame {
         panelText.setBackground(new java.awt.Color(255, 255, 255));
 
         // Nama produk
-        JLabel txtNama = new JLabel(produk.getNama());
+        JLabel txtNama = new JLabel();
+        if (produk instanceof Makanan) {
+            Makanan makanan = (Makanan) produk;
+            txtNama.setText(makanan.getNamaMakanan());
+        } else if (produk instanceof Minuman) {
+            Minuman minuman = (Minuman) produk;
+            txtNama.setText(minuman.getNamaMinuman());
+        }
         txtNama.setFont(new java.awt.Font("Segoe UI", 1, 12)); // Font yang diinginkan
         txtNama.setForeground(new java.awt.Color(51, 51, 51));
         txtNama.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -586,12 +766,23 @@ public class DashboardForm extends javax.swing.JFrame {
         panelKetersediaan.add(txtKetersediaan, java.awt.BorderLayout.LINE_START);
 
         // Tombol "Add" (opsional)
+        JPanel ButtonPanel = new JPanel();
+        ButtonPanel.setBackground(new java.awt.Color(255, 255, 255));
+        ButtonPanel.setLayout(new javax.swing.BoxLayout(ButtonPanel, javax.swing.BoxLayout.X_AXIS));
+
         JButton btnAddProduk = new JButton("Add");
         btnAddProduk.setBackground(new java.awt.Color(253, 82, 8));
         btnAddProduk.setFont(new java.awt.Font("Segoe UI", 1, 12));
         btnAddProduk.setForeground(new java.awt.Color(255, 255, 255));
-        btnAddProduk.setPreferredSize(new java.awt.Dimension(115, 23));
-        panelKetersediaan.add(btnAddProduk, java.awt.BorderLayout.EAST);
+        btnAddProduk.setPreferredSize(new java.awt.Dimension(100, 23));
+        ButtonPanel.add(btnAddProduk);
+
+        JSpinner jumlahBeli = new JSpinner();
+        jumlahBeli.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
+        jumlahBeli.setPreferredSize(new java.awt.Dimension(45, 22));
+        ButtonPanel.add(jumlahBeli);
+
+        panelKetersediaan.add(ButtonPanel, java.awt.BorderLayout.EAST);
 
         // Tambahkan hover effect
         btnAddProduk.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -608,6 +799,24 @@ public class DashboardForm extends javax.swing.JFrame {
             }
         });
 
+        btnAddProduk.addActionListener(evt -> {
+            if (!produk.isTersedia()) {
+                JOptionPane.showMessageDialog(null, "Produk tidak tersedia!");
+                jumlahBeli.setValue(0);
+                return;
+            }
+            // Tambahkan produk ke Order
+            int i = (int) jumlahBeli.getValue();
+            if (produk instanceof Makanan) {
+                Makanan makanan = (Makanan) produk;
+                addTable(makanan.getNamaMakanan(), i, produk.getHarga());
+            } else if (produk instanceof Minuman) {
+                Minuman minuman = (Minuman) produk;
+                addTable(minuman.getNamaMinuman(), i, produk.getHarga());
+            }
+            jumlahBeli.setValue(0);
+        });
+
         // Tambahkan panel ketersediaan ke panel utama
         foodCard.add(panelKetersediaan, java.awt.BorderLayout.SOUTH);
 
@@ -617,6 +826,108 @@ public class DashboardForm extends javax.swing.JFrame {
         // Refresh panel foodCardsPanel untuk menampilkan perubahan
         foodContent.revalidate();
         foodContent.repaint();
+    }
+
+    private void refreshFoodCards() {
+        ProdukDB produkDB = new ProdukDB();
+
+        try {
+            foodContent.removeAll();
+            List<Makanan> makananList = produkDB.getAllMakanan();
+            List<Minuman> minumanList = produkDB.getAllMinuman();
+
+            // Gunakan makananList dan minumanList sesuai kebutuhan
+            for (Makanan makanan : makananList) {
+                createFoodCard(makanan);
+            }
+
+            for (Minuman minuman : minumanList) {
+                createFoodCard(minuman);
+            }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Gagal memuat data produk: " + ex.getMessage());
+        }
+    }
+
+    private void addTable(String nama, int qty, double harga) {
+        DefaultTableModel dt = (DefaultTableModel) TblOrder.getModel();
+
+        if (qty <= 0) {
+            JOptionPane.showMessageDialog(null, "Jumlah harus lebih dari 0!");
+            return;
+        }
+
+        // Hitung total harga
+        double totHarga = harga * qty; // Pastikan qty adalah int atau double
+
+        // Cek apakah produk sudah ada di tabel
+        boolean itemDitemukan = false;
+        for (int row = 0; row < TblOrder.getRowCount(); row++) {
+            String namaDiTabel = TblOrder.getValueAt(row, 0).toString();
+            if (nama.equals(namaDiTabel)) {
+                int jumlahBaru = qty;
+
+                TblOrder.setValueAt(jumlahBaru, row, 1); // Perbarui jumlah
+                TblOrder.setValueAt(totHarga, row, 2); // Perbarui total harga
+                itemDitemukan = true;
+                break;
+            }
+        }
+
+        // Jika produk tidak ditemukan, tambahkan baris baru
+        if (!itemDitemukan) {
+            Vector v = new Vector();
+            v.add(nama);
+            v.add(qty);
+            v.add(totHarga);
+            dt.addRow(v);
+        }
+
+        hitungHarga();
+    }
+
+    private void hitungHarga() {
+        // menghitung Sub Harga
+        int numOfRow = TblOrder.getRowCount();
+        double subTotal = 0.0;
+        for (int i = 0; i < numOfRow; i++) {
+            double value = Double.valueOf(TblOrder.getValueAt(i, 2).toString());
+
+            subTotal += value;
+        }
+        DecimalFormat df = new DecimalFormat("00.00");
+        lblSubTotal.setText(df.format(subTotal));
+
+        //diskon
+        double potonganHarga = 0.0;
+        if (subTotal > 100000) {
+            potonganHarga = subTotal * 0.1;
+        } else {
+            potonganHarga = 0;
+        }
+
+        double totalHarga = subTotal - potonganHarga;
+
+        lblDiskon.setText(df.format(potonganHarga));
+        lblTotal.setText(df.format(totalHarga));
+    }
+
+    private void loadOrders(String username, String role) {
+        DefaultTableModel dt = (DefaultTableModel) tblMyOrder.getModel();
+        dt.setRowCount(0);
+
+        OrderDB orderDB = new OrderDB();
+        List<Order> orders = orderDB.getOrders(username, role);
+
+        for (Order order : orders) {
+            dt.addRow(new Object[]{
+                order.getIdTransaksi(),
+                order.getTotalHarga(),
+                order.getPotonganHarga(),
+                order.getWaktuPembelian(),
+                order.getStatusPesanan()
+            });
+        }
     }
 
     private void addHoverEffect(JButton button, Color focusTextColor, Icon defaultIcon, Icon focusedIcon) {
@@ -684,47 +995,53 @@ public class DashboardForm extends javax.swing.JFrame {
         UIManager.put("Button.arc", 15);
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new DashboardForm().setVisible(true);
-            }
+        java.awt.EventQueue.invokeLater(() -> {
+            new DashboardForm().setVisible(true);
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel MyOrderPanel;
     private javax.swing.JTable TblOrder;
     private javax.swing.JButton btnAddProduk;
     private javax.swing.JButton btnCheckOut;
+    private javax.swing.JButton btnDetail;
+    private javax.swing.JButton btnDetail1;
+    private javax.swing.JButton btnHapus;
     private javax.swing.JButton btnHistory;
     private javax.swing.JButton btnHome;
     private javax.swing.JButton btnLogOut;
-    private javax.swing.JButton btnProfile;
+    private javax.swing.JButton btnOrder;
+    private javax.swing.JButton btnRefresh;
+    private javax.swing.JButton btnRefreshOrder;
     private javax.swing.JPanel foodCards;
     private javax.swing.JPanel foodContent;
     private javax.swing.JPanel foodPanel;
     private javax.swing.JPanel historyPanel;
     private javax.swing.JPanel homePanel;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JSpinner jSpinner1;
     private javax.swing.JLabel lblDiskon;
     private javax.swing.JLabel lblSubTotal;
     private javax.swing.JLabel lblTotal;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JPanel orderPanel;
-    private javax.swing.JPanel profilePanel;
     private javax.swing.JScrollPane scrollFood;
     private javax.swing.JPanel sidePanel;
+    private javax.swing.JTable tblHistory;
+    private javax.swing.JTable tblMyOrder;
     private javax.swing.JLabel txtDeskripsi;
     private javax.swing.JLabel txtHarga;
     private javax.swing.JLabel txtKetersediaan;

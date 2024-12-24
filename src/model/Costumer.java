@@ -4,6 +4,10 @@
  */
 package model;
 
+import databases.db_connection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -34,29 +38,21 @@ public class Costumer extends User {
         if (ttl == null) {
             throw new ValidasiInputException("Tanggal lahir tidak boleh kosong.");
         }
-        
+
         // Validasi usia minimal 17 tahun
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(ttl);
         int birthYear = calendar.get(Calendar.YEAR);
-        int birthMonth = calendar.get(Calendar.MONTH);
-        int birthDay = calendar.get(Calendar.DAY_OF_MONTH);
 
         // Hitung usia berdasarkan tahun, bulan, dan hari
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-        int currentMonth = Calendar.getInstance().get(Calendar.MONTH);
-        int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
 
         // Jika usia kurang dari 17 tahun
         int age = currentYear - birthYear;
-        if (currentMonth < birthMonth || (currentMonth == birthMonth && currentDay < birthDay)) {
-            age--; // Kurangi umur jika belum melewati tanggal lahir tahun ini
-        }
-
         if (age < 17) {
             throw new ValidasiInputException("Usia minimal adalah 17 tahun.");
         }
-        
+
         if (ttl.after(new Date())) {
             throw new ValidasiInputException("Tanggal lahir tidak boleh lebih dari tanggal saat ini.");
         }
@@ -72,23 +68,32 @@ public class Costumer extends User {
         return namaLengkap;
     }
 
-//    public String getUsername() {
-//        return username;
-//    }
-//
-//    public String getPassword() {
-//        return password;
-//    }
-    public String getJenisKelamin() {
-        return jenisKelamin;
-    }
-
-    public String getTelp() {
-        return noTelp;
-    }
-
     public java.util.Date getTtl() {
         return ttl;
     }
 
+    @Override
+    public boolean register() {
+
+        try (Connection conn = db_connection.getConnection();) {
+
+            String sql = "INSERT INTO user (username, password, role, nama_lengkap, no_telp, TTL, jenis_kelamin) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, getUsername());
+            stmt.setString(2, getPassword());
+            stmt.setString(3, "costumer");
+            stmt.setString(4, namaLengkap);
+            stmt.setString(5, noTelp);
+            stmt.setDate(6, new java.sql.Date(ttl.getTime()));
+            stmt.setString(7, jenisKelamin);
+            stmt.executeUpdate();
+
+            return true;
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Gagal melakukan registrasi: " + e.getMessage(), e);
+        }
+
+    }
 }

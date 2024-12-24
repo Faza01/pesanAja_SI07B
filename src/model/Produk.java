@@ -11,23 +11,25 @@ import java.util.List;
  *
  * @author Faza Bilwildi Emyu_2311103083_SI-07-B
  */
-public class Produk {
-    private String nama;
+public abstract class Produk {
+
     private double harga;
     private String deskripsi;
     private boolean tersedia;
+    private byte[] gambar; // Tambahan untuk gambar
 
-    public Produk(String nama, double harga, String deskripsi, boolean tersedia) {
-        this.nama = nama;
+    public Produk(double harga, String deskripsi, boolean tersedia) {
         this.harga = harga;
         this.deskripsi = deskripsi;
         this.tersedia = tersedia;
     }
 
-    public String getNama() {
-        return nama;
-    }
-
+    // Tambahan jika gambar diperlukan
+//    public Produk(int id, String nama, double harga, String deskripsi, boolean tersedia, byte[] gambar) {
+//        this(id, nama, harga, deskripsi, tersedia);
+//        this.gambar = gambar;
+//    }
+    // Getter dan Setter
     public double getHarga() {
         return harga;
     }
@@ -40,24 +42,13 @@ public class Produk {
         return tersedia;
     }
 
-    public void setNama(String nama) {
-        this.nama = nama;
+    public byte[] getGambar() {
+        return gambar;
     }
 
-    public void setHarga(double harga) {
-        this.harga = harga;
+    public void setGambar(byte[] gambar) {
+        this.gambar = gambar;
     }
-
-    public void setDeskripsi(String deskripsi) {
-        this.deskripsi = deskripsi;
-    }
-
-    public void setTersedia(boolean tersedia) {
-        this.tersedia = tersedia;
-    }
-
-    public String getGambar() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
+    
+    public abstract String getDetail();
 }
-

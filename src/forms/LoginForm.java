@@ -1,6 +1,6 @@
 package forms;
 
-import controller.db_connection;
+import databases.db_connection;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLightLaf;
 import java.awt.Color;
@@ -9,7 +9,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import java.sql.*;
-import model.*;
+import model.User;
+import model.ValidasiInputException;
 
 //import logic.Login;
 //import logic.ValidasiInputException;
@@ -24,13 +25,15 @@ import model.*;
  */
 public class LoginForm extends javax.swing.JFrame {
 
+    private User currentUser;
+
     /**
      * Creates new form Login
      */
     public LoginForm() {
         initComponents();
         setLocationRelativeTo(null);
-        
+
         txtUsername.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "username");
         txtPassword.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "password");
     }
@@ -181,41 +184,43 @@ public class LoginForm extends javax.swing.JFrame {
 
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
         try {
+            // Ambil input dari form
             String username = txtUsername.getText();
             String password = String.valueOf(txtPassword.getPassword());
 
-            User user = new User(username, password, "");
+            // Buat objek User dan lakukan login
+            User user = new User(username, password, "") {
+            };
+            String role = user.login();
 
-            try (Connection conn = db_connection.getConnection()) {
-                String sql = "SELECT * FROM user WHERE username = ? AND password = ?";
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                stmt.setString(1, username);
-                stmt.setString(2, password);
+            if (role != null) {
+                JOptionPane.showMessageDialog(this, "Login Berhasil! Selamat datang, " + username, "Success", JOptionPane.INFORMATION_MESSAGE);
 
-                ResultSet rs = stmt.executeQuery();
+                currentUser = user.getCurrentUser(username);
 
-                if (rs.next()) {
-                    String role = rs.getString("role");
-
-                    JOptionPane.showMessageDialog(this, "Login Berhasil! Selamat datang, " + username, "Success", JOptionPane.INFORMATION_MESSAGE);
-
-                    if ("admin".equalsIgnoreCase(role)) {
-                        DashboardForm dashboard = new DashboardForm();
-                        dashboard.setVisible(true);
-                    } else if ("costumer".equalsIgnoreCase(role)) {
-                        DashboardForm dashboard = new DashboardForm();
-                        dashboard.setVisible(true);
-                    }
-                    this.dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Username atau Password salah!", "Error", JOptionPane.ERROR_MESSAGE);
+                if ("admin".equalsIgnoreCase(role)) {
+                    new DashboardForm(currentUser).setVisible(true);
+                } else if ("costumer".equalsIgnoreCase(role)) {
+                    new DashboardForm(currentUser).setVisible(true);
                 }
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Koneksi Database Gagal: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                e.printStackTrace();
+
+                // Tutup form login
+                this.dispose();
+
+            } else {
+                // Login gagal
+                JOptionPane.showMessageDialog(this, "Username atau Password salah!", "Error", JOptionPane.ERROR_MESSAGE);
+                txtPassword.setText("");
             }
+
         } catch (ValidasiInputException e) {
+            // Error validasi input
             JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+
+        } catch (SQLException e) {
+            // Error database
+            JOptionPane.showMessageDialog(this, "Terjadi kesalahan pada database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }//GEN-LAST:event_btnLoginActionPerformed
 
