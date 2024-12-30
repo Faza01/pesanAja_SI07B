@@ -13,29 +13,4 @@ public class Admin extends User {
     public Admin(String username, String password) throws ValidasiInputException {
         super(username, password, "admin");
     }
-
-    // Method tambahan untuk Admin
-    public void viewOrder() {
-
-    }
-
-    public void updateStatusOrder() {
-
-    }
-
-    public void createProduk() {
-
-    }
-
-    public void updateProduk() {
-
-    }
-
-    public void deleteProduk() {
-
-    }
-
-    public void setKetersediaanProduk() {
-
-    }
 }

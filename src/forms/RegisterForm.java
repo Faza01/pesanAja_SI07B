@@ -100,7 +100,7 @@ public class RegisterForm extends javax.swing.JFrame {
         });
 
         txtNama.setBackground(new java.awt.Color(242, 242, 242));
-        txtNama.setForeground(new java.awt.Color(128, 128, 128));
+        txtNama.setForeground(new java.awt.Color(51, 51, 51));
 
         jLabel2.setForeground(new java.awt.Color(51, 51, 51));
         jLabel2.setText("Nama Lengkap");
@@ -112,7 +112,7 @@ public class RegisterForm extends javax.swing.JFrame {
         jLabel4.setText("Sudah punya akun?");
 
         txtUsername.setBackground(new java.awt.Color(242, 242, 242));
-        txtUsername.setForeground(new java.awt.Color(128, 128, 128));
+        txtUsername.setForeground(new java.awt.Color(51, 51, 51));
 
         jLabel6.setForeground(new java.awt.Color(51, 51, 51));
         jLabel6.setText("Username");
@@ -152,13 +152,13 @@ public class RegisterForm extends javax.swing.JFrame {
         });
 
         txtTlp.setBackground(new java.awt.Color(242, 242, 242));
-        txtTlp.setForeground(new java.awt.Color(128, 128, 128));
+        txtTlp.setForeground(new java.awt.Color(51, 51, 51));
 
         jLabel10.setForeground(new java.awt.Color(51, 51, 51));
         jLabel10.setText("No Telp");
 
         txtPassword.setBackground(new java.awt.Color(242, 242, 242));
-        txtPassword.setForeground(new java.awt.Color(128, 128, 128));
+        txtPassword.setForeground(new java.awt.Color(51, 51, 51));
         txtPassword.setCaretColor(new java.awt.Color(51, 51, 51));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);

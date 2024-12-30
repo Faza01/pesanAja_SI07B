@@ -50,7 +50,6 @@ public class LoginForm extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        lblMessage = new javax.swing.JLabel();
         btnRegister = new javax.swing.JButton();
         txtPassword = new javax.swing.JPasswordField();
 
@@ -85,10 +84,10 @@ public class LoginForm extends javax.swing.JFrame {
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel1.setText("Welcome to NATURAL! ");
+        jLabel1.setText("Welcome to Pesan Aja! ");
 
         txtUsername.setBackground(new java.awt.Color(242, 242, 242));
-        txtUsername.setForeground(new java.awt.Color(128, 128, 128));
+        txtUsername.setForeground(new java.awt.Color(51, 51, 51));
         txtUsername.setToolTipText("");
 
         jLabel2.setForeground(new java.awt.Color(51, 51, 51));
@@ -99,9 +98,6 @@ public class LoginForm extends javax.swing.JFrame {
 
         jLabel4.setForeground(new java.awt.Color(51, 51, 51));
         jLabel4.setText("Belum punya akun?");
-
-        lblMessage.setForeground(new java.awt.Color(51, 51, 51));
-        lblMessage.setText("Keterangan");
 
         btnRegister.setBackground(new java.awt.Color(255, 255, 255));
         btnRegister.setForeground(new java.awt.Color(253, 82, 8));
@@ -114,7 +110,7 @@ public class LoginForm extends javax.swing.JFrame {
         });
 
         txtPassword.setBackground(new java.awt.Color(242, 242, 242));
-        txtPassword.setForeground(new java.awt.Color(128, 128, 128));
+        txtPassword.setForeground(new java.awt.Color(51, 51, 51));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -129,7 +125,6 @@ public class LoginForm extends javax.swing.JFrame {
                             .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                .addComponent(lblMessage, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(txtUsername, javax.swing.GroupLayout.Alignment.LEADING)
                                 .addComponent(btnLogin, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(txtPassword, javax.swing.GroupLayout.Alignment.LEADING))))
@@ -161,9 +156,7 @@ public class LoginForm extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(btnRegister))
-                .addGap(75, 75, 75)
-                .addComponent(lblMessage)
-                .addGap(22, 22, 22))
+                .addGap(113, 113, 113))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -199,7 +192,7 @@ public class LoginForm extends javax.swing.JFrame {
                 currentUser = user.getCurrentUser(username);
 
                 if ("admin".equalsIgnoreCase(role)) {
-                    new DashboardForm(currentUser).setVisible(true);
+                    new FrameTubes().setVisible(true);
                 } else if ("costumer".equalsIgnoreCase(role)) {
                     new DashboardForm(currentUser).setVisible(true);
                 }
@@ -260,7 +253,6 @@ public class LoginForm extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JLabel lblMessage;
     private javax.swing.JPasswordField txtPassword;
     private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables

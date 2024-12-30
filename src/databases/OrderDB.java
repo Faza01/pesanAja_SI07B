@@ -55,23 +55,39 @@ public class OrderDB {
         }
     }
 
-    public List<Order> getOrders(String username, String role) {
+    public List<Order> getOrders(String username, String role, String statusPesanan) {
         List<Order> orders = new ArrayList<>();
         String sql = "SELECT * FROM orders";
         boolean hasCondition = false;
 
-        // Tambahkan filter jika username diberikan
-        if (username != null && role != "admin") {
+        // Tambahkan filter jika username atau statusPesanan diberikan
+        if (username != null && !role.equalsIgnoreCase("admin")) {
             sql += " WHERE username = ?";
+            hasCondition = true;
+        }
+
+        if (statusPesanan != null && !statusPesanan.isEmpty()) {
+            if (hasCondition) {
+                sql += " AND status_pesanan = ?";
+            } else {
+                sql += " WHERE status_pesanan = ?";
+            }
             hasCondition = true;
         }
 
         try (Connection conn = db_connection.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(sql);
 
+            int paramIndex = 1;
+
             // Set parameter jika ada username
-            if (hasCondition) {
-                stmt.setString(1, username);
+            if (username != null && !role.equalsIgnoreCase("admin")) {
+                stmt.setString(paramIndex++, username);
+            }
+
+            // Set parameter jika ada statusPesanan
+            if (statusPesanan != null && !statusPesanan.isEmpty()) {
+                stmt.setString(paramIndex++, statusPesanan);
             }
 
             ResultSet rs = stmt.executeQuery();
@@ -92,6 +108,84 @@ public class OrderDB {
         }
 
         return orders;
+    }
+
+    public Order getDetailOrder(String idTransaksi) {
+        Order order = null;
+
+        String orderQuery = "SELECT * FROM orders WHERE id_transaksi = ?";
+        String orderItemsQuery = "SELECT * FROM order_item WHERE id_transaksi = ?";
+
+        try (Connection conn = db_connection.getConnection()) {
+            // Ambil data dari tabel orders
+            try (PreparedStatement stmt = conn.prepareStatement(orderQuery)) {
+                stmt.setString(1, idTransaksi);
+                ResultSet rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    order = new Order(
+                            rs.getString("id_transaksi"),
+                            rs.getString("username")
+                    );
+                    order.setTotalHarga(rs.getDouble("total_harga"));
+                    order.setPotonganHarga(rs.getDouble("potongan_harga"));
+                    order.setWaktuPembelian(rs.getTimestamp("waktu_pembelian"));
+                    order.setStatusPesanan(rs.getString("status_pesanan"));
+                }
+            }
+
+            // Jika order ditemukan, ambil item-itemnya
+            if (order != null) {
+                List<String> namaProdukList = new ArrayList<>();
+                List<Integer> qtyList = new ArrayList<>();
+                List<Double> totHargaList = new ArrayList<>();
+
+                try (PreparedStatement stmt = conn.prepareStatement(orderItemsQuery)) {
+                    stmt.setString(1, idTransaksi);
+                    ResultSet rs = stmt.executeQuery();
+
+                    while (rs.next()) {
+                        namaProdukList.add(rs.getString("nama_produk"));
+                        qtyList.add(rs.getInt("qty"));
+                        totHargaList.add(rs.getDouble("total_harga"));
+                    }
+                }
+
+                order.setListNamaProduk(namaProdukList);
+                order.setListQty(qtyList);
+                order.setListTotHarga(totHargaList);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Terjadi kesalahan saat mengambil detail order: " + e.getMessage());
+        }
+
+        return order;
+    }
+
+    public void updateStatusOrder(String idTransaksi, String statusPesanan) {
+        String sql = "UPDATE orders SET status_pesanan = ? WHERE id_transaksi = ?";
+
+        try (Connection conn = db_connection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            // Mengatur parameter
+            stmt.setString(1, statusPesanan);
+            stmt.setString(2, idTransaksi);
+
+            // Menjalankan perintah update
+            int rowsUpdated = stmt.executeUpdate();
+
+            if (rowsUpdated > 0) {
+                System.out.println("Status pesanan berhasil diperbarui untuk id_transaksi: " + idTransaksi);
+            } else {
+                System.out.println("Tidak ada pesanan yang diperbarui untuk id_transaksi: " + idTransaksi);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Terjadi kesalahan saat memperbarui status pesanan: " + e.getMessage());
+        }
     }
 
 }

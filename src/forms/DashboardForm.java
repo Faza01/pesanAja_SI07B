@@ -20,7 +20,11 @@ import java.text.DecimalFormat;
 import java.util.Vector;
 import javax.swing.table.DefaultTableModel;
 import databases.ProdukDB;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.*;
+import java.util.ArrayList;
 import model.Order;
 import model.ValidasiInputException;
 import java.util.Date;
@@ -56,7 +60,7 @@ public class DashboardForm extends javax.swing.JFrame {
 
         addHoverEffect(btnHome, new Color(253, 82, 8), homeIcon, homeIcon_Focus);
         addHoverEffect(btnOrder, new Color(253, 82, 8), historyIcon, historyIcon_Focus);
-        addHoverEffect(btnHistory, new Color(253, 82, 8), historyIcon, historyIcon_Focus);
+//        addHoverEffect(btnHistory, new Color(253, 82, 8), historyIcon, historyIcon_Focus);
         addHoverEffect(btnLogOut, new Color(253, 82, 8), logOutIcon, logOutIcon_Focus);
     }
 
@@ -88,7 +92,6 @@ public class DashboardForm extends javax.swing.JFrame {
         btnHome = new javax.swing.JButton();
         btnOrder = new javax.swing.JButton();
         btnLogOut = new javax.swing.JButton();
-        btnHistory = new javax.swing.JButton();
         mainPanel = new javax.swing.JPanel();
         homePanel = new javax.swing.JPanel();
         foodPanel = new javax.swing.JPanel();
@@ -114,6 +117,8 @@ public class DashboardForm extends javax.swing.JFrame {
         tblMyOrder = new javax.swing.JTable();
         btnDetail1 = new javax.swing.JButton();
         btnRefreshOrder = new javax.swing.JButton();
+        jFilterStatus = new javax.swing.JComboBox<>();
+        jLabel10 = new javax.swing.JLabel();
         historyPanel = new javax.swing.JPanel();
         jLabel7 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -213,16 +218,6 @@ public class DashboardForm extends javax.swing.JFrame {
             }
         });
 
-        btnHistory.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        btnHistory.setForeground(new java.awt.Color(51, 51, 51));
-        btnHistory.setText("History");
-        btnHistory.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
-        btnHistory.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnHistoryActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout sidePanelLayout = new javax.swing.GroupLayout(sidePanel);
         sidePanel.setLayout(sidePanelLayout);
         sidePanelLayout.setHorizontalGroup(
@@ -235,8 +230,7 @@ public class DashboardForm extends javax.swing.JFrame {
                 .addGap(53, 53, 53)
                 .addGroup(sidePanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(btnOrder, javax.swing.GroupLayout.DEFAULT_SIZE, 95, Short.MAX_VALUE)
-                    .addComponent(btnHome, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(btnHistory, javax.swing.GroupLayout.DEFAULT_SIZE, 95, Short.MAX_VALUE))
+                    .addComponent(btnHome, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(0, 0, Short.MAX_VALUE))
         );
         sidePanelLayout.setVerticalGroup(
@@ -246,9 +240,7 @@ public class DashboardForm extends javax.swing.JFrame {
                 .addComponent(btnHome, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(btnOrder, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(btnHistory, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 340, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 393, Short.MAX_VALUE)
                 .addComponent(btnLogOut, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(23, 23, 23))
         );
@@ -502,6 +494,22 @@ public class DashboardForm extends javax.swing.JFrame {
             }
         });
 
+        jFilterStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "proses", "selesai", "batal" }));
+        jFilterStatus.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                jFilterStatusItemStateChanged(evt);
+            }
+        });
+        jFilterStatus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jFilterStatusActionPerformed(evt);
+            }
+        });
+
+        jLabel10.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel10.setForeground(new java.awt.Color(51, 51, 51));
+        jLabel10.setText("Status Pesanan : ");
+
         javax.swing.GroupLayout MyOrderPanelLayout = new javax.swing.GroupLayout(MyOrderPanel);
         MyOrderPanel.setLayout(MyOrderPanelLayout);
         MyOrderPanelLayout.setHorizontalGroup(
@@ -512,12 +520,16 @@ public class DashboardForm extends javax.swing.JFrame {
                     .addGroup(MyOrderPanelLayout.createSequentialGroup()
                         .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 216, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel10)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jFilterStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnRefreshOrder))
                     .addGroup(MyOrderPanelLayout.createSequentialGroup()
                         .addGap(6, 6, 6)
                         .addComponent(btnDetail1, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 824, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(50, Short.MAX_VALUE))
         );
         MyOrderPanelLayout.setVerticalGroup(
             MyOrderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -525,7 +537,10 @@ public class DashboardForm extends javax.swing.JFrame {
                 .addGap(26, 26, 26)
                 .addGroup(MyOrderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel8)
-                    .addComponent(btnRefreshOrder))
+                    .addComponent(btnRefreshOrder)
+                    .addGroup(MyOrderPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jFilterStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel10)))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 435, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
@@ -588,7 +603,7 @@ public class DashboardForm extends javax.swing.JFrame {
                         .addGroup(historyPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(btnDetail, javax.swing.GroupLayout.PREFERRED_SIZE, 236, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 805, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(17, Short.MAX_VALUE))
+                .addContainerGap(63, Short.MAX_VALUE))
         );
         historyPanelLayout.setVerticalGroup(
             historyPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -637,45 +652,80 @@ public class DashboardForm extends javax.swing.JFrame {
             return;
         }
 
-        // Membuat Order baru
-        String idTransaksi = "TRX" + System.currentTimeMillis(); // Menggunakan waktu saat ini sebagai ID transaksi
-        Order newOrder = new Order(idTransaksi, currentUser.getUsername());
-
-        // Menambahkan produk dari TblOrder ke dalam Order baru
+        // Menghitung total harga dari tabel
         for (int i = 0; i < rowCount; i++) {
-            String namaProduk = dtm.getValueAt(i, 0).toString();
-            int qty = Integer.parseInt(dtm.getValueAt(i, 1).toString());
             double totHarga = Double.parseDouble(dtm.getValueAt(i, 2).toString());
-
-            newOrder.getListNamaProduk().add(namaProduk);
-            newOrder.getListQty().add(qty);
-            newOrder.getListTotHarga().add(totHarga);
-
             totalHarga += totHarga;
-            newOrder.setTotalHarga(totalHarga); // Menambahkan ke total harga
         }
 
-        // Menambahkan potongan harga jika ada
+        // Mengurangi potongan harga jika ada
         double potongan = Double.parseDouble(lblDiskon.getText());
-        newOrder.setPotonganHarga(potongan);
         totalHarga -= potongan;
-        newOrder.setPotonganHarga(totalHarga); // Mengurangi potongan dari total harga
 
-        // Update waktu pembelian
-        newOrder.setWaktuPembelian(new Date());
-        newOrder.setStatusPesanan("Proses");// Status pesanan default "Proses"
+        // Meminta input pembayaran dari pengguna
+        String inputPembayaran = JOptionPane.showInputDialog(
+                this,
+                "Total yang harus dibayar: Rp " + totalHarga + "\nMasukkan jumlah pembayaran:",
+                "Pembayaran",
+                JOptionPane.QUESTION_MESSAGE
+        );
 
-        // Menyimpan order ke database
-        OrderDB.saveOrder(newOrder);
+        // Validasi input pembayaran
+        if (inputPembayaran == null || inputPembayaran.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Pembayaran dibatalkan!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-        // Menampilkan pesan bahwa pesanan berhasil dibuat
-        JOptionPane.showMessageDialog(null, "Pesanan berhasil dibuat! Total harga: " + newOrder.getTotalHarga());
+        try {
+            double pembayaran = Double.parseDouble(inputPembayaran);
 
-        // Opsional: Reset tabel setelah checkout
-        dtm.setRowCount(0); // Menghapus semua baris di tabel
-        lblSubTotal.setText("0");
-        lblDiskon.setText("0");
-        lblTotal.setText("0");
+            if (pembayaran < totalHarga) {
+                JOptionPane.showMessageDialog(this, "Pembayaran tidak mencukupi!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            double kembalian = pembayaran - totalHarga;
+
+            // Membuat Order baru
+            String idTransaksi = "TRX" + System.currentTimeMillis(); // Menggunakan waktu saat ini sebagai ID transaksi
+            Order newOrder = new Order(idTransaksi, currentUser.getUsername());
+
+            // Menambahkan produk dari TblOrder ke dalam Order baru
+            for (int i = 0; i < rowCount; i++) {
+                String namaProduk = dtm.getValueAt(i, 0).toString();
+                int qty = Integer.parseInt(dtm.getValueAt(i, 1).toString());
+                double totHarga = Double.parseDouble(dtm.getValueAt(i, 2).toString());
+
+                newOrder.getListNamaProduk().add(namaProduk);
+                newOrder.getListQty().add(qty);
+                newOrder.getListTotHarga().add(totHarga);
+            }
+
+            newOrder.setTotalHarga(totalHarga);
+            newOrder.setPotonganHarga(potongan);
+            newOrder.setWaktuPembelian(new Date());
+            newOrder.setStatusPesanan("Proses"); // Status pesanan default "Proses"
+
+            // Menyimpan order ke database
+            OrderDB.saveOrder(newOrder);
+
+            // Menampilkan pesan bahwa pesanan berhasil dibuat
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Pesanan berhasil dibuat!\nTotal harga: Rp " + totalHarga + "\nKembalian: Rp " + kembalian,
+                    "Sukses",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+            // Reset tabel setelah checkout
+            dtm.setRowCount(0); // Menghapus semua baris di tabel
+            lblSubTotal.setText("0");
+            lblDiskon.setText("0");
+            lblTotal.setText("0");
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Jumlah pembayaran harus berupa angka!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnCheckOutActionPerformed
 
     private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
@@ -695,16 +745,59 @@ public class DashboardForm extends javax.swing.JFrame {
     }//GEN-LAST:event_btnDetailActionPerformed
 
     private void btnDetail1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetail1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnDetail1ActionPerformed
+        int selectedRow = tblMyOrder.getSelectedRow(); // Mendapatkan baris yang dipilih
 
-    private void btnHistoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHistoryActionPerformed
-        cardLayout.show(mainPanel, "History");
-    }//GEN-LAST:event_btnHistoryActionPerformed
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih pesanan terlebih dahulu!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Mendapatkan nilai idTransaksi dari kolom pertama
+        String idTransaksi = tblMyOrder.getValueAt(selectedRow, 0).toString();
+
+        try {
+            OrderDB orderDB = new OrderDB();
+            Order orderDetail = orderDB.getDetailOrder(idTransaksi);
+
+            if (orderDetail != null) {
+                // Tampilkan detail order (contoh: di JOptionPane atau panel)
+                String detailPesanan = "ID Transaksi: " + orderDetail.getIdTransaksi() + "\n"
+                        + "User: " + orderDetail.getUser() + "\n"
+                        + "Total Harga: " + orderDetail.getTotalHarga() + "\n"
+                        + "Potongan Harga: " + orderDetail.getPotonganHarga() + "\n"
+                        + "Waktu Pembelian: " + orderDetail.getWaktuPembelian() + "\n"
+                        + "Status Pesanan: " + orderDetail.getStatusPesanan() + "\n"
+                        + "Daftar Produk:\n";
+
+                List<String> namaProdukList = orderDetail.getListNamaProduk();
+                List<Integer> qtyList = orderDetail.getListQty();
+                List<Double> totHargaList = orderDetail.getListTotHarga();
+
+                for (int i = 0; i < namaProdukList.size(); i++) {
+                    detailPesanan += "- " + namaProdukList.get(i) + " x" + qtyList.get(i) + " = " + totHargaList.get(i) + "\n";
+                }
+
+                // Menampilkan detail pesanan
+                JOptionPane.showMessageDialog(this, detailPesanan, "Detail Pesanan", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Detail pesanan tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Terjadi kesalahan: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_btnDetail1ActionPerformed
 
     private void btnRefreshOrderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefreshOrderActionPerformed
         loadOrders(currentUser.getUsername(), currentUser.getRole());
     }//GEN-LAST:event_btnRefreshOrderActionPerformed
+
+    private void jFilterStatusItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jFilterStatusItemStateChanged
+        loadOrders(currentUser.getUsername(), currentUser.getRole());
+    }//GEN-LAST:event_jFilterStatusItemStateChanged
+
+    private void jFilterStatusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFilterStatusActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jFilterStatusActionPerformed
 
     private void createFoodCard(Produk produk) {
         // Duplikasi panel foodCards (menggunakan template yang sudah ada)
@@ -718,6 +811,7 @@ public class DashboardForm extends javax.swing.JFrame {
         // gambarLabel.setIcon(new ImageIcon(produk.getGambar())); // Gambar produk (uncomment jika ada implementasi)
         gambarLabel.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
         gambarLabel.setPreferredSize(new java.awt.Dimension(100, 100));
+        tampilGambar(produk.getGambar(), gambarLabel, 100, 100);
         foodCard.add(gambarLabel, java.awt.BorderLayout.WEST);
 
         // Panel untuk teks (nama, harga, deskripsi)
@@ -831,21 +925,61 @@ public class DashboardForm extends javax.swing.JFrame {
     private void refreshFoodCards() {
         ProdukDB produkDB = new ProdukDB();
 
+        foodContent.removeAll();
+        List<Produk> produkList = produkDB.semuaProduk();
+        // Memfilter produk menjadi list Makanan dan Minuman
+        List<Makanan> makananList = new ArrayList<>();
+        List<Minuman> minumanList = new ArrayList<>();
+        for (Produk produk : produkList) {
+            if (produk instanceof Makanan) {
+                makananList.add((Makanan) produk);
+            } else if (produk instanceof Minuman) {
+                minumanList.add((Minuman) produk);
+            }
+        }
+        // Gunakan makananList dan minumanList sesuai kebutuhan
+        for (Makanan makanan : makananList) {
+            createFoodCard(makanan);
+        }
+        for (Minuman minuman : minumanList) {
+            createFoodCard(minuman);
+        }
+    }
+
+    private void tampilGambar(String path, JLabel lblGambar, int labelWidth, int labelHeight) {
+        File file = new File(path);
+
+        // Validasi apakah file ada
+        if (!file.exists()) {
+            lblGambar.setIcon(null);
+            lblGambar.setText("Gambar tidak ditemukan");
+            return;
+        }
+
         try {
-            foodContent.removeAll();
-            List<Makanan> makananList = produkDB.getAllMakanan();
-            List<Minuman> minumanList = produkDB.getAllMinuman();
+            // Membaca file gambar dari path
+            byte[] img = Files.readAllBytes(file.toPath());
+            ImageIcon imageIcon = new ImageIcon(img);
 
-            // Gunakan makananList dan minumanList sesuai kebutuhan
-            for (Makanan makanan : makananList) {
-                createFoodCard(makanan);
-            }
+            // Dimensi label
+            // Menghitung skala gambar agar sesuai dengan label
+            int imageWidth = imageIcon.getIconWidth();
+            int imageHeight = imageIcon.getIconHeight();
 
-            for (Minuman minuman : minumanList) {
-                createFoodCard(minuman);
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(null, "Gagal memuat data produk: " + ex.getMessage());
+            double scaleX = (double) labelWidth / (double) imageWidth;
+            double scaleY = (double) labelHeight / (double) imageHeight;
+            double scale = Math.min(scaleX, scaleY);
+
+            // Melakukan scaling pada gambar
+            Image scaledImage = imageIcon.getImage().getScaledInstance((int) (scale * imageWidth), (int) (scale * imageHeight), Image.SCALE_SMOOTH);
+
+            // Menampilkan gambar ke label
+            lblGambar.setIcon(new ImageIcon(scaledImage));
+            lblGambar.setText(""); // Hapus teks jika gambar berhasil ditampilkan
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            lblGambar.setIcon(null);
+            lblGambar.setText("Gagal memuat gambar");
         }
     }
 
@@ -915,9 +1049,10 @@ public class DashboardForm extends javax.swing.JFrame {
     private void loadOrders(String username, String role) {
         DefaultTableModel dt = (DefaultTableModel) tblMyOrder.getModel();
         dt.setRowCount(0);
+        String statusPesanan = jFilterStatus.getSelectedItem().toString();
 
         OrderDB orderDB = new OrderDB();
-        List<Order> orders = orderDB.getOrders(username, role);
+        List<Order> orders = orderDB.getOrders(username, role, statusPesanan);
 
         for (Order order : orders) {
             dt.addRow(new Object[]{
@@ -1008,7 +1143,6 @@ public class DashboardForm extends javax.swing.JFrame {
     private javax.swing.JButton btnDetail;
     private javax.swing.JButton btnDetail1;
     private javax.swing.JButton btnHapus;
-    private javax.swing.JButton btnHistory;
     private javax.swing.JButton btnHome;
     private javax.swing.JButton btnLogOut;
     private javax.swing.JButton btnOrder;
@@ -1019,7 +1153,9 @@ public class DashboardForm extends javax.swing.JFrame {
     private javax.swing.JPanel foodPanel;
     private javax.swing.JPanel historyPanel;
     private javax.swing.JPanel homePanel;
+    private javax.swing.JComboBox<String> jFilterStatus;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;

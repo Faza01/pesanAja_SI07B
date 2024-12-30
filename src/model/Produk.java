@@ -13,23 +13,24 @@ import java.util.List;
  */
 public abstract class Produk {
 
-    private double harga;
-    private String deskripsi;
-    private boolean tersedia;
-    private byte[] gambar; // Tambahan untuk gambar
+    protected int idProduk;
+    protected double harga;
+    protected String deskripsi;
+    protected boolean tersedia;
+    protected String gambar; // Tambahan untuk gambar
 
-    public Produk(double harga, String deskripsi, boolean tersedia) {
+    public Produk(double harga, String deskripsi, boolean tersedia) throws ValidasiInputException {
+        if (harga <= 0) {
+            throw new ValidasiInputException("Harga produk harus lebih besar dari 0.");
+        }
+        if (deskripsi == null || deskripsi.isEmpty()) {
+            throw new ValidasiInputException("Deskripsi produk tidak boleh kosong.");
+        }
         this.harga = harga;
         this.deskripsi = deskripsi;
         this.tersedia = tersedia;
     }
 
-    // Tambahan jika gambar diperlukan
-//    public Produk(int id, String nama, double harga, String deskripsi, boolean tersedia, byte[] gambar) {
-//        this(id, nama, harga, deskripsi, tersedia);
-//        this.gambar = gambar;
-//    }
-    // Getter dan Setter
     public double getHarga() {
         return harga;
     }
@@ -42,13 +43,19 @@ public abstract class Produk {
         return tersedia;
     }
 
-    public byte[] getGambar() {
+    public String getGambar() {
         return gambar;
     }
 
-    public void setGambar(byte[] gambar) {
+    public void setGambar(String gambar) {
         this.gambar = gambar;
     }
-    
-    public abstract String getDetail();
+
+    public int getIdProduk() {
+        return idProduk;
+    }
+
+    public void setIdProduk(int idProduk) {
+        this.idProduk = idProduk;
+    }
 }

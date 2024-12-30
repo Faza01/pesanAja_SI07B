@@ -13,8 +13,14 @@ public class Makanan extends Produk {
     private String namaMakanan;
     private String kategoriMakanan; // pembuka, utama, penutup
 
-    public Makanan(String namaMakanan, double harga, String deskripsi, boolean tersedia, String kategoriMakanan) {
+    public Makanan(String namaMakanan, double harga, String deskripsi, boolean tersedia, String kategoriMakanan) throws ValidasiInputException {
         super(harga, deskripsi, tersedia);
+        if (namaMakanan == null || namaMakanan.isEmpty()) {
+            throw new ValidasiInputException("Nama makanan tidak boleh kosong.");
+        }
+        if (kategoriMakanan == null || kategoriMakanan.isEmpty()) {
+            throw new ValidasiInputException("Kategori tidak boleh kosong.");
+        }
         this.kategoriMakanan = kategoriMakanan;
         this.namaMakanan = namaMakanan;
     }
@@ -25,10 +31,5 @@ public class Makanan extends Produk {
 
     public String getKategoriMakanan() {
         return kategoriMakanan;
-    }
-
-    @Override
-    public String getDetail() {
-        return "Makanan: " + namaMakanan + ", Kategori Makanan: " + kategoriMakanan;
     }
 }

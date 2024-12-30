@@ -66,6 +66,18 @@ public class Order {
         return listTotHarga;
     }
 
+    public void setListNamaProduk(List<String> listNamaProduk) {
+        this.listNamaProduk = listNamaProduk;
+    }
+
+    public void setListQty(List<Integer> listQty) {
+        this.listQty = listQty;
+    }
+
+    public void setListTotHarga(List<Double> listTotHarga) {
+        this.listTotHarga = listTotHarga;
+    }
+
     public Date getWaktuPembelian() {
         return waktuPembelian;
     }
